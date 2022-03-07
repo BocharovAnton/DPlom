@@ -1,0 +1,27 @@
+JSONObject obj = new JSONObject();
+        if(str.contains(",")){
+            if(count(str, ",") == count(str, ":")-1){
+                for (String s: str.split(",")
+                     ) {
+                    parseInsertString(deleteVneshnieScobki(s));
+                }
+            }
+        }
+        else{
+            if(str.contains("{")){
+                if(str.contains("}")){
+                    String tmpstr = str.substring(str.indexOf("{")+1, str.lastIndexOf("}"));
+                    obj.put(str.split(":",2)[0], parseInsertString(tmpstr));
+                }
+                else{
+                    System.out.println("Not paired { and }");
+                }
+            }
+            else{
+                obj.put(parseKeyOrValue(str.split(":")[0]),parseKeyOrValue(str.split(":")[1]));
+                return obj;
+            }
+        }
+
+
+        return obj;
