@@ -2,33 +2,33 @@ import java.util.Scanner;
 
 public class InputChecker {
     boolean logged = false;
-    int check() throws Exception {
+    boolean check() throws Exception {
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
+        Login login = new Login();
         switch(input){
             case ".exit":
                 System.out.println("Exiting...");
-                return 0;
+                return false;
             case ".login":
-                Login login = new Login();
                 if(login.usersExists()){
-                    //вызвать функцию проверки существования файла с пользователями
+                    return login.loginUser();
                 }
                 else{
                     //логиним админа, который создает пользователей
-                    login.adminLogin();
+                    return login.adminLogin();
                 }
-                logged = true;
-                return 1;
             case ".json":
                 if(logged == true){
                  Actions jsonCreator = new Actions();
-                 jsonCreator.UI();
+                 return jsonCreator.UI();
                 }
                 else{
                     System.out.println("You're not logged");
                 }
+            case ".register":
+                return login.registerUser();
         }
-        return 0;
+        return true;
     }
 }
