@@ -62,8 +62,6 @@ public class Actions {
         }
 
         return true;
-        //find();
-        // count();
     }
     public boolean showDocList(String fileName){
         JSONParser jsonParser = new JSONParser();
@@ -133,7 +131,7 @@ public class Actions {
                 JSONObject newJsonObject = new JSONObject();
                 for (Object object:jsonObject.keySet()
                 ) {
-                    if((object.equals(docName))==false){
+                    if(!(object.equals(docName))){
                         newJsonObject.put(object, jsonObject.get(object));
                     }
 
@@ -259,7 +257,6 @@ public class Actions {
     }
 
     public boolean findMap(JSONAware obj, Object key, Object value) throws Exception {
-        boolean finded = false;
         if(obj.getClass() == JSONObject.class) {
             JSONObject jsonObject = (JSONObject) obj;
             if(jsonObject.containsKey(key)&&((jsonObject).get(key).toString().equals(value.toString()))){

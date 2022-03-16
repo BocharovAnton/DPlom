@@ -10,12 +10,19 @@ import java.util.UUID;
 
 public class Login {
     private String fileName = "users";
-    public boolean adminLogin() throws Exception {
+    public Object adminLogin() throws Exception {
+        System.out.println("No users. Only admin can login.");
         Scanner in = new Scanner(System.in);
         System.out.print("Login:");
         String login = in.nextLine();
         System.out.print("Password:");
         String password = in.nextLine();
+        JSONObject info = new JSONObject();
+        info.put("login", login);
+        info.put("password", password);
+        Integer accessLevel = 4;
+        info.put("access", accessLevel);
+        saveUser(info);
         if(login.equals("admin")&&password.equals("admin")){
             System.out.printf("Do you wanna change login/password? (Y/N)");
             String action = in.nextLine();
@@ -49,9 +56,9 @@ public class Login {
             return false;
         }
     }
-    public boolean loginUser(){
+    public Object loginUser(){
         Actions actions = new Actions();
-        Object accessLevel;
+        Object accessLevel = -1;
         Object id;
         JSONParser parser = new JSONParser();
         try {
@@ -65,18 +72,15 @@ public class Login {
                  JSONObject user = (JSONObject) jsonObject.get(object);
                  if(user.get("login").equals(login)&&(user.get("password").equals(password))){
                      id = object;
-                     System.out.printf(id.toString());
                      accessLevel = user.get("access");
-                     System.out.println("\n");
-                     System.out.printf(accessLevel.toString());
-                     return true;
+                     return accessLevel;
                  }
             }
-            return false;
         }
         catch(Exception exp){
             return false;
         }
+        return false;
     }
     public boolean registerUser() throws Exception {
         Scanner in = new Scanner(System.in);
@@ -90,6 +94,10 @@ public class Login {
         info.put("login", login);
         info.put("password", password);
         info.put("access", accessLevel);
+        saveUser(info);
+        return true;
+    }
+    public boolean saveUser(JSONObject info){
         UUID uuid = UUID.randomUUID();
 
         JSONParser parser = new JSONParser();
@@ -99,7 +107,7 @@ public class Login {
             if(jsonObject.keySet().size()>0){
                 for (Object object:jsonObject.keySet()){
                     JSONObject oldInf = (JSONObject) jsonObject.get(object);
-                    if(oldInf.get("login").equals(login)){
+                    if(oldInf.get("login").equals(info.get("login"))){
                         System.out.println("Login already used");
                         return registerUser();
                     }
@@ -114,7 +122,7 @@ public class Login {
             System.out.println("Saved");
         }
         catch(Exception ignore){
-
+            return false;
         }
         return true;
     }
