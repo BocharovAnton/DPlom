@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) throws Exception {
-        InputChecker inputChecker = new InputChecker();
-        inputChecker.login();
+        Menu menu = new Menu();
+        menu.login();
     }
 }

@@ -7,8 +7,8 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.Scanner;
 
-public class Actions {
-    public boolean UI() throws Exception {
+public class DBActions {
+    public boolean UI(JSONObject user) throws Exception {
         Scanner in = new Scanner(System.in);
         System.out.println("Enter collection name");
         String fileName = in.nextLine();//Пользователь вводит коллекцию, с которой собирается работать
