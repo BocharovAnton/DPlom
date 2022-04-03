@@ -4,9 +4,8 @@ import java.util.Scanner;
 
 public class Menu {
     private boolean logged = false;
-
+    private Scanner in = new Scanner(System.in);
     void login() throws Exception {
-        Scanner in = new Scanner(System.in);
         JSONObject user = new JSONObject();
         MAC mac = new MAC();
         while(true){
@@ -38,20 +37,23 @@ public class Menu {
     void afterLogin(JSONObject user) throws Exception {
         MAC mac = new MAC();
         while(true){
-            Scanner in = new Scanner(System.in);
+
             String input = in.nextLine();
             switch (input) {
                 case "json" -> {
                     if (!user.get("access").equals(4)) {
                         DBActions actions = new DBActions();
-                        actions.UI(user);
+                        System.out.println("Enter collection name");
+                        String fileName = in.nextLine();//Пользователь вводит коллекцию, с которой собирается работать
+                        actions.UI(user, fileName);
                     } else {
                         System.out.println("Admin can only register users");
                     }
                     return;
                 }
                 case "register" -> {
-                    if (user.get("access").equals(4)) {
+                    System.out.println(user.get("access"));
+                    if (Long.parseLong(user.get("access").toString()) == 4){
                         System.out.print("Login:");
                         String login = in.nextLine();
                         System.out.print("Password:");

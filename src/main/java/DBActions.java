@@ -8,62 +8,51 @@ import java.io.*;
 import java.util.Scanner;
 
 public class DBActions {
-    public boolean UI(JSONObject user) throws Exception {
-        Scanner in = new Scanner(System.in);
-        System.out.println("Enter collection name");
-        String fileName = in.nextLine();//Пользователь вводит коллекцию, с которой собирается работать
+    public void UI(JSONObject user, String fileName) throws Exception {
 
-        //проверяем, есть ли у пользователя доступ для работы с ней
+        Scanner in = new Scanner(System.in);
+        //!!!!!проверяем, есть ли у пользователя доступ для работы с ней!!!!!
         boolean exit = false;
         while(!exit){
             System.out.print(fileName+"->");
-            String action = in.nextLine();
-            String name;
-            String json;
-            String[] splitString = action.split("\\(", 2);
-            switch(splitString[0]){
-                case("insert"):
-                    String newString = action.substring(action.indexOf("(")+1, action.lastIndexOf(")"));
-                    splitString = newString.split(":", 2);
-                    name = splitString[0].replace(" ", "");
-                    name = name.replace("\"", "");
-                    json = splitString[1].replace(" ", "");
-                    createCollection(fileName);
-                    if(insert(fileName, name, json)){
+            String inputString = in.nextLine();
+            String name,json;
+            String action = inputString.split("\\(", 2)[0];
+            String parameters = inputString.substring(inputString.indexOf("(")+1, inputString.lastIndexOf(")"));
+            switch (action) {//разбираем стоку, введенную пользователем
+                case ("insert") -> {
+                    name = parameters.split(":", 2)[0].replace(" ", "").replace("\"", "");
+                    json = parameters.split(":", 2)[1].replace(" ", "");
+                    if (!createCollection(fileName))
+                        System.out.println("already exists");
+                    if (insert(fileName, name, json)) {
                         exit = true;
                     }
-                    return true;
-                case("change"):
-                    String changedJson = action.substring(action.indexOf("(")+1, action.lastIndexOf(")"));
-                    if(change(changedJson, fileName)){
-                        System.out.println("11");
+                }
+                case ("change") -> {
+                    if (change(parameters, fileName)) {
+                        System.out.println("Changed successful");
                     }
-                    return true;
-                case("delete"):
-                    String docName = action.substring(action.indexOf("(")+1, action.lastIndexOf(")"));
-                    if(deleteDoc(docName, fileName)){
+                }
+                case ("delete") -> {
+                    if (deleteDoc(parameters, fileName)) {
                         System.out.println("Deleted successful");
-                        return true;
                     }
-                    else{
-                        return false;
-                    }
-                case("show"):
-                    return showDocList(fileName);
-                case("find"):
-                    String key = action.substring(action.indexOf("(")+1, action.lastIndexOf(")")).split(",")[0].trim();
-                    String value = action.substring(action.indexOf("(")+1, action.lastIndexOf(")")).split(",")[1].trim();
-                    if(find(fileName, key, value)){
-
-                    }else{
+                }
+                case ("show") -> {
+                    showDocList(fileName);
+                }
+                case ("find") -> {
+                    String key = parameters.split(",")[0].trim();
+                    String value = parameters.split(",")[1].trim();
+                    if (!find(fileName, key, value)) {
                         System.out.println("Nothing founded");
                     }
+                }
             }
         }
-
-        return true;
     }
-    public boolean showDocList(String fileName){
+    public void showDocList(String fileName){
         JSONParser jsonParser = new JSONParser();
         try (FileReader reader = new FileReader(fileName+".json")) {
             Object obj = jsonParser.parse(reader);
@@ -72,35 +61,30 @@ public class DBActions {
         }
         catch(Exception exp){
             System.out.println("Collection is empty or doesn't exists");
-            return false;
         }
-        return true;
     }
     public boolean change(String changedJSON, String fileName){
         JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(fileName+".json")) {
-            Object obj = jsonParser.parse(reader);
-            Object changedObj = jsonParser.parse(changedJSON);
-            JSONObject changedJsonObject = (JSONObject) changedObj;
-            JSONObject jsonObject = (JSONObject) obj;
+        try (FileReader file = new FileReader(fileName+".json")) {
+            JSONObject changedJsonObject = (JSONObject) jsonParser.parse(changedJSON);
+            JSONObject collection = (JSONObject) jsonParser.parse(file);
             if(changedJsonObject.keySet().size()>1){
                 System.out.println("Only one doc may be changed");
                 return false;
             }
-            if((jsonObject).keySet().contains(changedJsonObject.keySet().toArray()[0])){
-                System.out.println(changedJsonObject.keySet().toArray()[0]);
-                System.out.println(changedJsonObject.get((changedJsonObject.keySet().toArray()[0])));
-                jsonObject.put(changedJsonObject.keySet().toArray()[0], changedJsonObject.get(changedJsonObject.keySet().toArray()[0]));
-                    if(saveFile(jsonObject, fileName)){
+            Object docName = changedJsonObject.keySet().toArray()[0];
+            if((collection).containsKey(docName)){
+                collection.put(docName, changedJsonObject.get(docName));
+                    if(saveFile(collection, fileName)){
                         System.out.printf("Changed successfully");
                     }
             }
             else{
-                System.out.println("Collection doens't contains doc like that. Wanna add it? Y/N");
+                System.out.println("Collection doesn't contains doc like that. Wanna add it? Y/N");
                 Scanner in = new Scanner(System.in);
                 String action = in.nextLine();
                 if(action.equals("Y")){
-                    jsonObject.put(changedJsonObject.keySet().toArray()[0], changedJsonObject.get(changedJsonObject.keySet().toArray()[0]));
+                    collection.put(docName, changedJsonObject.get(docName));
                     System.out.printf("Added successfully");
                 }
             }
@@ -108,38 +92,30 @@ public class DBActions {
         catch(ParseException parseException){
             System.out.println("Wrong JSON string");
             return false;
-        }
-        catch(FileNotFoundException fileNotFound){
+        } catch(IOException fileNotFound){
             System.out.println("Collection is empty or doesn't exists");
             return false;
-        } catch (IOException e) {
-            System.out.println("Collection is empty or doesn't exists");
-            return false;
-        }
-        catch (Exception exp) {
-            System.out.println("error");
+        } catch (Exception exp) {
+            System.out.println("error in change function");
             return false;
         }
         return false;
     }
-    public boolean deleteDoc(String docName, String fileName){
+    public boolean deleteDoc(String docNameToDelete, String fileName){
         JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(fileName+".json")) {
-            Object obj = jsonParser.parse(reader);
-            JSONObject jsonObject = (JSONObject) obj;
-            if(jsonObject.containsKey(docName)) {
-                JSONObject newJsonObject = new JSONObject();
-                for (Object object:jsonObject.keySet()
-                ) {
-                    if(!(object.equals(docName))){
-                        newJsonObject.put(object, jsonObject.get(object));
+        try (FileReader file = new FileReader(fileName+".json")) {
+            JSONObject doc = (JSONObject) jsonParser.parse(file);
+            if(doc.containsKey(docNameToDelete)) {
+                JSONObject newDoc = new JSONObject();
+                for (Object docName:doc.keySet()) {
+                    if(!(docName.equals(docNameToDelete))){
+                        newDoc.put(docName, doc.get(docName));
                     }
-
                 }
-                return saveFile(newJsonObject, fileName);
+                return saveFile(newDoc, fileName);//сохраняем файл
             }
             else{
-                System.out.println("Collection doesn't contains that document");
+                System.out.println("Collection doesn't contains that doc");
                 return false;
             }
         }
@@ -148,70 +124,38 @@ public class DBActions {
             return false;
         }
     }
-    public void createCollection(String fileName) throws Exception {
-        File file = new File(fileName+".json");
-        file.createNewFile();
-    }
-    public boolean insert(String fileName, String name, String str) throws Exception {
+
+    public boolean insert(String fileName, String newDocName, String stringToInsert) throws Exception {
+        Scanner in = new Scanner(System.in);
         JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(fileName+".json")) // Если в файле уже есть записи
+        try (FileReader file = new FileReader(fileName+".json"))
         {
-            Object obj = jsonParser.parse(reader);
-            JSONObject jsonObject = (JSONObject) obj;
-            String cont;
-            if(jsonObject.containsKey(name)) {
-                System.out.println("Already exist. Wanna change?(Y/N)");
-                Scanner in = new Scanner(System.in);
-                cont = in.nextLine();
+            JSONObject collection = (JSONObject) jsonParser.parse(file);
+            String action = "Y";
+            if(collection.containsKey(newDocName)){
+                System.out.println("Doc already exists. Wanna change it?(Y/N)");
+                action = in.nextLine();
             }
-            else {
-                cont = "Y";
-            }
-            if(cont.equals("Y")){
-                JSONObject newJsonObject = (JSONObject) obj;
-                for (Object object:jsonObject.keySet()
-                ) {
-                    newJsonObject.put(object, jsonObject.get(object));
-                }
-                JSONParser parser = new JSONParser();
-                JSONObject json = new JSONObject();
-                try {
-                    json = (JSONObject) parser.parse(str);
-                    newJsonObject.put(name, json);
+            if(action.equals("Y")){
+                try{
+                    JSONObject jsonToInsert = (JSONObject) jsonParser.parse(stringToInsert);
+                    collection.put(newDocName, jsonToInsert);
                 } catch (Exception exp) {
-                    if (str.contains("[") && (str.contains("]"))) {
-                        JSONArray array = (JSONArray) parser.parse(str);
-                        newJsonObject.put(name, array);
-                    } else {
+                    if (stringToInsert.contains("[") && (stringToInsert.contains("]"))) {
+                        JSONArray jsonToInsert = (JSONArray) jsonParser.parse(stringToInsert);
+                        collection.put(newDocName, jsonToInsert);
+                    } else{
                         System.out.println("Parse error");
                     }
                 }
-                if(saveFile(newJsonObject, fileName)){
+                if(saveFile(collection, fileName)){
                     System.out.println("Saved");
+                    return true;
                 }
-                return true;
             }
-            return false;
         }
-        catch(Exception exp){ // Если файл пустой
-            JSONObject newJsonObject = new JSONObject();
-            JSONParser parser = new JSONParser();
-            JSONObject json = new JSONObject();
-            try {
-                json = (JSONObject) parser.parse(str);
-                newJsonObject.put(name, json);
-            } catch (Exception exp1) {
-                if (str.contains("[") && (str.contains("]"))) {
-                    JSONArray array = (JSONArray) parser.parse(str);
-                    newJsonObject.put(name, array);
-                } else {
-                    System.out.println("Parse error");
-                }
-            }
-            if(saveFile(newJsonObject, fileName)){
-                System.out.println("Saved");
-                return true;
-            }
+        catch(Exception exp){
+            System.out.println("insert function error");
         }
         return false;
     }
@@ -223,7 +167,7 @@ public class DBActions {
             JSONObject jsonObject = (JSONObject) obj;
             for (Object object: jsonObject.keySet()) {
                  if (findMap((JSONAware) jsonObject.get(object), key, value)){
-                    System.out.println((JSONAware) jsonObject.get(object));
+                    System.out.println(jsonObject.get(object));
                  }
             }
             return true;
@@ -233,7 +177,8 @@ public class DBActions {
         }
         return false;
     }
-    public boolean count(String fileName) throws Exception {
+
+    public boolean count(String fileName) throws Exception {//количество вхождений(?)
         JSONParser parser = new JSONParser();
         JSONAware obj = (JSONAware) parser.parse(new FileReader(fileName + ".json"));
         Scanner in = new Scanner(System.in);
@@ -254,6 +199,23 @@ public class DBActions {
         System.out.println("Count=" + count);
 
         return false;
+    }
+
+    public boolean saveFile(JSONAware obj, String fileName) throws Exception {
+        FileWriter file = new FileWriter(fileName + ".json", false);
+        try {
+            file.write(obj.toJSONString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                file.flush();
+                file.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
 
     public boolean findMap(JSONAware obj, Object key, Object value) throws Exception {
@@ -277,24 +239,13 @@ public class DBActions {
         }
         return false;
     }
-    public static int count(String str, String target) {
-        return (str.length() - str.replace(target, "").length()) / target.length();
+
+    public boolean createCollection(String fileName) throws Exception {
+        File file = new File(fileName+".json");
+        return file.createNewFile();
     }
 
-    public boolean saveFile(JSONAware obj, String fileName) throws Exception {
-        FileWriter file = new FileWriter(fileName + ".json", false);
-        try {
-            file.write(obj.toJSONString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                file.flush();
-                file.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return true;
+    public static int count(String str, String target) {
+        return (str.length() - str.replace(target, "").length()) / target.length();
     }
 }

@@ -1,4 +1,14 @@
 {
+  "ass": {
+    "address": {
+      "country": "Russia",
+      "city": "Saratov",
+      "index": 410007
+    },
+    "phone": "222222",
+    "name": "Hike",
+    "lastname": "Pazlov"
+  },
   "mass": {
     "address": {
       "country": "Russia",

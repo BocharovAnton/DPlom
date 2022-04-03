@@ -21,9 +21,9 @@ public class MAC {
     public Object loginUser(String login, String password){
         JSONParser parser = new JSONParser();
         try {
-            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(fileName + ".json"));
-            for (Object object: jsonObject.keySet()) {
-                JSONObject user = (JSONObject) jsonObject.get(object);
+            JSONObject usersJSON = (JSONObject) parser.parse(new FileReader(fileName + ".json"));
+            for (Object id: usersJSON.keySet()) {
+                JSONObject user = (JSONObject) usersJSON.get(id);
                 if(user.get("login").equals(login)&&(user.get("password").equals(password))){
                     System.out.println(user);
                     return user;
@@ -41,7 +41,7 @@ public class MAC {
         info.put("login", login);
         info.put("password", password);
         info.put("access", 4);
-        JSONObject user = new JSONObject();
+        JSONObject user;
         if (login.equals("admin") && password.equals("admin")) {
             saveUser(info);
             user = (JSONObject) loginUser(login, password);
@@ -56,18 +56,18 @@ public class MAC {
         JSONParser parser = new JSONParser();
         DBActions actions = new DBActions();
         try (FileReader reader = new FileReader("users"+".json")) {
-            JSONObject jsonObject = (JSONObject) parser.parse(reader);
-            if(jsonObject.keySet().size()>0){
-                for (Object id:jsonObject.keySet()){
-                    JSONObject info = (JSONObject) jsonObject.get(id);
+            JSONObject usersJSON = (JSONObject) parser.parse(reader);
+            if(usersJSON.keySet().size()>0){
+                for (Object id:usersJSON.keySet()){
+                    JSONObject info = (JSONObject) usersJSON.get(id);
                     if((info.get("login").equals(user.get("login")))&&(info.get("password")).equals(user.get("password")))
                     {
                         JSONObject newInfo = new JSONObject();
                         newInfo.put("login", login);
                         newInfo.put("password", password);
                         newInfo.put("access", user.get("access"));
-                        jsonObject.put(id,newInfo);
-                        actions.saveFile(jsonObject, "users");
+                        usersJSON.put(id,newInfo);
+                        actions.saveFile(usersJSON, "users");
                         System.out.println("Saved");
                     }
                 }
