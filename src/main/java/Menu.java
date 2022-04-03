@@ -3,17 +3,16 @@ import org.json.simple.JSONObject;
 import java.util.Scanner;
 
 public class Menu {
-    private boolean logged = false;
-    private Scanner in = new Scanner(System.in);
+    private final boolean logged = false;
+    private final Scanner in = new Scanner(System.in);
     void login() throws Exception {
         JSONObject user = new JSONObject();
         MAC mac = new MAC();
         while(true){
             String input = in.nextLine();
             switch (input) {
-                case "exit" -> {
+                case "exit" ->
                     System.out.println("Exiting...");
-                }
                 case "login" -> {
                     if (!mac.usersExists()) {
                         System.out.println("No users registered. Only admin can login.");

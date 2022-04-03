@@ -9,7 +9,6 @@ import java.util.Scanner;
 
 public class DBActions {
     public void UI(JSONObject user, String fileName) throws Exception {
-
         Scanner in = new Scanner(System.in);
         //!!!!!проверяем, есть ли у пользователя доступ для работы с ней!!!!!
         boolean exit = false;
@@ -39,9 +38,8 @@ public class DBActions {
                         System.out.println("Deleted successful");
                     }
                 }
-                case ("show") -> {
+                case ("show") ->
                     showDocList(fileName);
-                }
                 case ("find") -> {
                     String key = parameters.split(",")[0].trim();
                     String value = parameters.split(",")[1].trim();
@@ -76,7 +74,7 @@ public class DBActions {
             if((collection).containsKey(docName)){
                 collection.put(docName, changedJsonObject.get(docName));
                     if(saveFile(collection, fileName)){
-                        System.out.printf("Changed successfully");
+                        System.out.print("Changed successfully");
                     }
             }
             else{
@@ -85,7 +83,7 @@ public class DBActions {
                 String action = in.nextLine();
                 if(action.equals("Y")){
                     collection.put(docName, changedJsonObject.get(docName));
-                    System.out.printf("Added successfully");
+                    System.out.print("Added successfully");
                 }
             }
         }
@@ -125,7 +123,7 @@ public class DBActions {
         }
     }
 
-    public boolean insert(String fileName, String newDocName, String stringToInsert) throws Exception {
+    public boolean insert(String fileName, String newDocName, String stringToInsert){
         Scanner in = new Scanner(System.in);
         JSONParser jsonParser = new JSONParser();
         try (FileReader file = new FileReader(fileName+".json"))
@@ -218,7 +216,7 @@ public class DBActions {
         return true;
     }
 
-    public boolean findMap(JSONAware obj, Object key, Object value) throws Exception {
+    public boolean findMap(JSONAware obj, Object key, Object value){
         if(obj.getClass() == JSONObject.class) {
             JSONObject jsonObject = (JSONObject) obj;
             if(jsonObject.containsKey(key)&&((jsonObject).get(key).toString().equals(value.toString()))){
@@ -243,9 +241,5 @@ public class DBActions {
     public boolean createCollection(String fileName) throws Exception {
         File file = new File(fileName+".json");
         return file.createNewFile();
-    }
-
-    public static int count(String str, String target) {
-        return (str.length() - str.replace(target, "").length()) / target.length();
     }
 }

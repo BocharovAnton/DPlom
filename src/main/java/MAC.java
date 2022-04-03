@@ -3,11 +3,10 @@ import org.json.simple.parser.JSONParser;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.UUID;
 
 public class MAC {
-    private String fileName = "users";
+    private final String fileName = "users";
 
     public boolean registerUser(String login, String password, int access) throws Exception {
         JSONObject info = new JSONObject();
@@ -105,7 +104,7 @@ public class MAC {
     }
 
     public boolean usersExists(){
-        try (FileReader reader = new FileReader("users"+".json")) {
+        try (FileReader ignored = new FileReader("users"+".json")) {
             return true;
         }
         catch(IOException exp){
