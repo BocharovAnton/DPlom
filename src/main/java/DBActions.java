@@ -171,9 +171,17 @@ public class DBActions {
             return true;
         }
         else{
-            //ДОПИСАТЬ, ЕСЛИ МАССИВ
+            JSONArray jsonArray = (JSONArray) obj;
+            for (Object  tmpObject: jsonArray) {
+                JSONObject jsonObject = (JSONObject) tmpObject;
+                for (Object object: jsonObject.keySet()) {
+                    if (findMap((JSONAware) jsonObject.get(object), key, value)){
+                        System.out.println(jsonObject.get(object));
+                    }
+                }
+            }
+            return true;
         }
-        return false;
     }
 
     public boolean count(String fileName) throws Exception {//количество вхождений(?)
@@ -181,9 +189,9 @@ public class DBActions {
         JSONAware obj = (JSONAware) parser.parse(new FileReader(fileName + ".json"));
         Scanner in = new Scanner(System.in);
         System.out.println("Key:");
-        Object key = in.nextLine();//разобраться с типом
+        Object key = in.nextLine();
         System.out.println("Value:");
-        Object value = in.nextLine();//разобраться с типом
+        Object value = in.nextLine();
         int count = 0;
         if(obj.getClass() == JSONObject.class) {
             JSONObject jsonObject = (JSONObject) obj;
@@ -224,8 +232,7 @@ public class DBActions {
             }
             else{
                 try{
-                    for (Object object: jsonObject.keySet()
-                    ) {
+                    for (Object object: jsonObject.keySet()) {
                         if (findMap((JSONAware) jsonObject.get(object), key, value)){
                             return true;
                         }
