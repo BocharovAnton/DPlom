@@ -1,4 +1,5 @@
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import java.util.Scanner;
 
@@ -25,6 +26,21 @@ public class Menu {
                         user = (JSONObject) mac.loginUser(_login, password);
                     } else {
                         user = (JSONObject) mac.loginNoUsers(_login, password);
+                    }
+                }
+                case "test" -> {
+                    while(true){
+                        JSONParser jsonParser = new JSONParser();
+                        System.out.printf("Json:");
+                        String json = in.nextLine();
+                        try{
+                            Object obj = jsonParser.parse(json);
+                            System.out.println("yes");
+                            System.out.println(obj.toString());
+                        }
+                        catch(Exception exp){
+                            System.out.println("not");
+                        }
                     }
                 }
             }

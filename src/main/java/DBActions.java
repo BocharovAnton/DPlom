@@ -20,13 +20,9 @@ public class DBActions {
             String parameters = inputString.substring(inputString.indexOf("(")+1, inputString.lastIndexOf(")"));
             switch (action) {//разбираем стоку, введенную пользователем
                 case ("insert") -> {
-                    name = parameters.split(":", 2)[0].replace(" ", "").replace("\"", "");
-                    json = parameters.split(":", 2)[1].replace(" ", "");
-                    if (!createCollection(fileName))
-                        System.out.println("already exists");
-                    if (insert(fileName, name, json)) {
-                        exit = true;
-                    }
+                    json = parameters.replace(" ", "");
+                    createCollection(fileName);
+                    insert(fileName, user, json);
                 }
                 case ("change") -> {
                     if (change(parameters, fileName)) {
@@ -38,8 +34,8 @@ public class DBActions {
                         System.out.println("Deleted successful");
                     }
                 }
-                case ("show") ->
-                    showDocList(fileName);
+//                case ("show") ->
+//                    showDocList(fileName);
                 case ("find") -> {
                     String key = parameters.split(",")[0].trim();
                     String value = parameters.split(",")[1].trim();
@@ -123,39 +119,31 @@ public class DBActions {
         }
     }
 
-    public boolean insert(String fileName, String newDocName, String stringToInsert){
-        Scanner in = new Scanner(System.in);
+    public void insert(String fileName, JSONObject user, String stringToInsert) throws Exception {
         JSONParser jsonParser = new JSONParser();
+        JSONObject collection = new JSONObject();
+        Object jsonToInsert = "";
         try (FileReader file = new FileReader(fileName+".json"))
         {
-            JSONObject collection = (JSONObject) jsonParser.parse(file);
-            String action = "Y";
-            if(collection.containsKey(newDocName)){
-                System.out.println("Doc already exists. Wanna change it?(Y/N)");
-                action = in.nextLine();
-            }
-            if(action.equals("Y")){
-                try{
-                    JSONObject jsonToInsert = (JSONObject) jsonParser.parse(stringToInsert);
-                    collection.put(newDocName, jsonToInsert);
-                } catch (Exception exp) {
-                    if (stringToInsert.contains("[") && (stringToInsert.contains("]"))) {
-                        JSONArray jsonToInsert = (JSONArray) jsonParser.parse(stringToInsert);
-                        collection.put(newDocName, jsonToInsert);
-                    } else{
-                        System.out.println("Parse error");
-                    }
-                }
-                if(saveFile(collection, fileName)){
-                    System.out.println("Saved");
-                    return true;
-                }
-            }
+            collection = (JSONObject) jsonParser.parse(file);
         }
-        catch(Exception exp){
-            System.out.println("insert function error");
+        catch(ParseException parseException){
+            System.out.println("file is empty");
         }
-        return false;
+        catch(IOException exp){
+            System.out.println("file error");
+        }
+        try{
+            jsonToInsert = jsonParser.parse(stringToInsert);
+        }
+        catch(ParseException exp){
+            System.out.println("Parse error");
+        }
+        int access = Integer.parseInt(user.get("access").toString());
+        collection.put(access, jsonToInsert);
+        if(saveFile(collection, fileName)){
+            System.out.println("Saved");
+        }
     }
 
     public boolean find(String fileName, String key, String value) throws Exception {

@@ -8,13 +8,12 @@ import java.util.UUID;
 public class MAC {
     private final String fileName = "users";
 
-    public boolean registerUser(String login, String password, int access) throws Exception {
+    public void registerUser(String login, String password, int access) throws Exception {
         JSONObject info = new JSONObject();
         info.put("login", login);
         info.put("password", password);
         info.put("access", access);
         saveUser(info);
-        return true;
     }
 
     public Object loginUser(String login, String password){
