@@ -6,6 +6,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class DBActions {
     public void UI(JSONObject user, String fileName) throws Exception {
@@ -15,7 +16,7 @@ public class DBActions {
         while(!exit){
             System.out.print(fileName+"->");
             String inputString = in.nextLine();
-            String name,json;
+            String json;
             String action = inputString.split("\\(", 2)[0];
             String parameters = inputString.substring(inputString.indexOf("(")+1, inputString.lastIndexOf(")"));
             switch (action) {//разбираем стоку, введенную пользователем
@@ -37,10 +38,19 @@ public class DBActions {
 //                case ("show") ->
 //                    showDocList(fileName);
                 case ("find") -> {
-                    String key = parameters.split(",")[0].trim();
-                    String value = parameters.split(",")[1].trim();
-                    if (!find(fileName, key, value)) {
-                        System.out.println("Nothing founded");
+                    JSONParser parser = new JSONParser();
+                    json = parameters.replace(" ", "");
+                    try{
+                        JSONObject jsonObject =(JSONObject) parser.parse(json);
+                        if (!find( fileName,
+                                jsonObject.keySet().toArray()[0].toString(),
+                                jsonObject.get(jsonObject.keySet().toArray()[0]).toString())
+                        ){
+                            System.out.println("Nothing founded");
+                        }
+                    }
+                    catch(ParseException parseException){
+
                     }
                 }
             }
@@ -122,7 +132,9 @@ public class DBActions {
     public void insert(String fileName, JSONObject user, String stringToInsert) throws Exception {
         JSONParser jsonParser = new JSONParser();
         JSONObject collection = new JSONObject();
-        Object jsonToInsert = "";
+        JSONObject jsonDoc = new JSONObject();
+        JSONObject fullJsonDoc = new JSONObject();
+        UUID id = UUID.randomUUID();
         try (FileReader file = new FileReader(fileName+".json"))
         {
             collection = (JSONObject) jsonParser.parse(file);
@@ -134,13 +146,16 @@ public class DBActions {
             System.out.println("file error");
         }
         try{
-            jsonToInsert = jsonParser.parse(stringToInsert);
+            jsonDoc = (JSONObject) jsonParser.parse(stringToInsert);
+            int access = Integer.parseInt(user.get("access").toString());
+            fullJsonDoc.put("access", access);
+            fullJsonDoc.put("doc", jsonDoc);
+
         }
         catch(ParseException exp){
             System.out.println("Parse error");
         }
-        int access = Integer.parseInt(user.get("access").toString());
-        collection.put(access, jsonToInsert);
+        collection.put(id, fullJsonDoc);
         if(saveFile(collection, fileName)){
             System.out.println("Saved");
         }
@@ -153,7 +168,8 @@ public class DBActions {
             JSONObject jsonObject = (JSONObject) obj;
             for (Object object: jsonObject.keySet()) {
                  if (findMap((JSONAware) jsonObject.get(object), key, value)){
-                    System.out.println(jsonObject.get(object));
+                     String finded = ((JSONAware) jsonObject.get(object)).toJSONString();
+                     System.out.println(finded);
                  }
             }
             return true;
@@ -165,11 +181,13 @@ public class DBActions {
                 for (Object object: jsonObject.keySet()) {
                     if (findMap((JSONAware) jsonObject.get(object), key, value)){
                         System.out.println(jsonObject.get(object));
+                        return true;
                     }
                 }
             }
-            return true;
         }
+        System.out.println("Nothing founded");
+        return false;
     }
 
     public boolean count(String fileName) throws Exception {//количество вхождений(?)
@@ -212,23 +230,25 @@ public class DBActions {
         return true;
     }
 
-    public boolean findMap(JSONAware obj, Object key, Object value){
-        if(obj.getClass() == JSONObject.class) {
+    public boolean findMap(Object obj, Object key, Object value){
+        try {
             JSONObject jsonObject = (JSONObject) obj;
-            if(jsonObject.containsKey(key)&&((jsonObject).get(key).toString().equals(value.toString()))){
+            if (jsonObject.containsKey(key) && ((jsonObject).get(key).toString().equals(value.toString()))) {
                 return true;
             }
-            else{
-                try{
-                    for (Object object: jsonObject.keySet()) {
-                        if (findMap((JSONAware) jsonObject.get(object), key, value)){
+            else {
+                for (Object object : jsonObject.keySet()) {
+                    try {
+                        if (findMap((JSONAware) jsonObject.get(object), key, value)) {
                             return true;
                         }
+                    } catch (Exception ignored) {
                     }
                 }
-                catch(Exception ignored){
-                }
             }
+        }
+        catch(Exception exp){
+            System.out.println(exp.toString());
         }
         return false;
     }

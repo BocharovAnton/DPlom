@@ -18,10 +18,12 @@ public class Menu {
                     if (!mac.usersExists()) {
                         System.out.println("No users registered. Only admin can login.");
                     }
-                    System.out.print("Login:");
-                    String _login = in.nextLine();
-                    System.out.print("Password:");
-                    String password = in.nextLine();
+                    //System.out.print("Login:");
+                    //String _login = in.nextLine();
+                    // System.out.print("Password:");
+                    //String password = in.nextLine();
+                    String _login = "user1";
+                    String  password = "password";
                     if (mac.usersExists()) {
                         user = (JSONObject) mac.loginUser(_login, password);
                     } else {
